@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DentalAI - Scale Your Practice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0A0A0A;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-glow: 120, 119, 198; /* Vercel purple-ish */
+            --accent-cyan: 0, 255, 255;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- BACKGROUND FX --- */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 80%);
+            opacity: 0.3;
+        }
+
+        .gradient-orb {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(var(--accent-glow), 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: drift 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes drift {
+            0% { top: -10%; left: -10%; }
+            100% { top: 20%; left: 30%; }
+        }
+
+        /* --- SPOTLIGHT EFFECT --- */
+        /* Used via JS to track mouse */
+        .spotlight-overlay {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.06), transparent 40%);
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo span { color: cyan; }
+
+        .btn-primary {
+            background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        /* --- SECTION 1: HOOK (HERO) --- */
+        .hero {
+            padding: 8rem 0 6rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .pill-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            font-size: 5rem;
+            line-height: 1.1;
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(to bottom right, #fff 30%, #666);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 3rem auto;
+            line-height: 1.6;
+        }
+
+        /* --- SECTION 2: DETAILED VALUE (CARDS) --- */
+        .features {
+            padding: 4rem 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            /* Proximity glow logic handled by ::after */
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 12px;
+            padding: 1px;
+            background: radial-gradient(
+                600px circle at var(--mouse-x) var(--mouse-y), 
+                rgba(255, 255, 255, 0.4),
+                transparent 40%
+            );
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
+            width: 50px; height: 50px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            color: #fff;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .card:hover .card-icon {
+            background: rgba(255,255,255,0.15);
+            transform: scale(1.1) rotate(5deg);
+            color: cyan;
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* --- SECTION 3: PROOF (TESTIMONIALS) --- */
+        .proof-section {
+            padding: 8rem 0;
+            position: relative;
+        }
+        
+        .section-header {
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .proof-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: #0F0F0F; /* Slightly lighter than bg */
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+
+        .stars {
+            color: #00b67a; /* Trustpilot green */
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .quote {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .author {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .author-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .author-role {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* --- SECTION 4: CTA --- */
+        .cta-section {
+            padding: 6rem 0;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.02));
+        }
+
+        .cta-section h2 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            letter-spacing: -1.5px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 3rem; }
+            .grid-3, .proof-grid { grid-template-columns: 1fr; }
+            .hero { padding-top: 4rem; }
+        }
+
+        /* ANIMATED BEAM LINE */
+        .beam-line {
+            height: 1px;
+            width: 100%;
+            background: var(--border-color);
+            position: relative;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+        
+        .beam-line::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -10%;
+            width: 100px; height: 1px;
+            background: linear-gradient(90deg, transparent, cyan, transparent);
+            animation: beam-move 3s infinite ease-in-out;
+        }
+
+        @keyframes beam-move {
+            0% { left: -10%; }
+            100% { left: 110%; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background Elements -->
+    <div class="grid-bg"></div>
+    <div class="gradient-orb"></div>
+    <div class="spotlight-overlay" id="spotlight"></div>
+
+    <div class="container">
+        <!-- Navigation -->
+        <nav>
+            <div class="logo">
+                <span>✦</span> DentalFlow AI
+            </div>
+            <a href="#" class="btn-primary">Book Demo</a>
+        </nav>
+
+        <!-- 1. The Hook (Hero) -->
+        <header class="hero">
+            <div class="pill-badge">System v2.0 Released</div>
+            <h1>Automate your<br>patient acquisition.</h1>
+            <p>
+                Stop chasing leads. Our AI systems fill your dental chairs with qualified patients, handle booking 24/7, and reactivate dormant files automatically.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="#" class="btn-primary" style="background: white; color: black; font-weight: 600;">Start Scaling</a>
+                <a href="#" class="btn-primary">View Case Studies</a>
+            </div>
+        </header>
+
+        <!-- Divider with Beam Effect -->
+        <div class="beam-line"></div>
+
+        <!-- 2 & 3. Value Proposition & Details -->
+        <section class="features">
+            <div class="grid-3" id="cards-container">
+                <!-- Card 1 -->
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3>Intelligent Reactivation</h3>
+                    <p>Our database reactivation AI scans your dormant patient records and engages them via SMS/Email to book hygiene appointments without your staff lifting a finger.</p>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="card">
+                    <div class="card-icon">🤖</div>
+                    <h3>24/7 AI Concierge</h3>
+                    <p>Never miss a call. Our voice and text AI agents handle inquiries, qualify insurance, and schedule appointments directly into your practice management software.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="card">
+                    <div class="card-icon">📈</div>
+                    <h3>Predictive Growth</h3>
+                    <p>Real-time analytics dashboard helps you understand LTV and acquisition costs. We don't just generate leads; we generate confirmed appointments.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Proof (Testimonials) -->
+        <section class="proof-section">
+            <div class="section-header">
+                <h2>Don't take our word for it,<br>see what our clients say.</h2>
+            </div>
+            
+            <div class="proof-grid">
+                <!-- Testimonial 1 -->
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="quote">"We added $40k in production in our first month. The reactivation AI found patients we hadn't seen in 3 years and got them booked instantly."</p>
+                    <div class="author">
+                        <span class="author-name">Dr. Sarah Jenkins</span>
+                        <span class="author-role">Jenkins Family Dentistry</span>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="quote">"I was skeptical about AI, but the front desk loves it. It answers the phone when we are busy and books the appointment. It feels like magic."</p>
+                    <div class="author">
+                        <span class="author-name">Dr. Mark Alston</span>
+                        <span class="author-role">Alston Orthodontics</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. CTA -->
+        <footer class="cta-section">
+            <h2>Ready to fill your chairs?</h2>
+            <a href="#" class="btn-primary" style="padding: 16px 32px; font-size: 1.1rem;">Talk to an Engineer</a>
+        </footer>
+    </div>
+
+    <script>
+        // Cursor Proximity Effect script
+        const spotlight = document.getElementById('spotlight');
+        const cards = document.querySelectorAll('.card');
+
+        document.addEventListener('mousemove', (e) => {
+            // Update the global spotlight
+            spotlight.style.setProperty('--x', `${e.clientX}px`);
+            spotlight.style.setProperty('--y', `${e.clientY}px`);
+
+            // Update cards for the "border beam" effect
+            for(const card of cards) {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            }
+        });
+    </script>
+</body>
+</html>
